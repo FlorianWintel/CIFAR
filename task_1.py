@@ -48,7 +48,7 @@ class Model_task1(nn.Module):
         self.classifier = nn.Sequential(
                 nn.Linear(self.num_output_features,64),
                 nn.Linear(64,num_classes),
-                nn.Softmax()
+                #nn.Softmax()
                 )
     def forward(self, x):
         x = self.layer1(x)
@@ -66,10 +66,10 @@ class Trainer:
         Set hyperparameters, architecture, tracking variables etc.
         """
         # Define hyperparameters
-        self.epochs = 1
+        self.epochs = 30
         self.batch_size = 64
-        self.learning_rate = 5e-2
-        self.early_stop_count = 2
+        self.learning_rate = 1e-1
+        self.early_stop_count = 3
 
         # Architecture
 
@@ -78,7 +78,7 @@ class Trainer:
         # Initialize the mode
         self.model = Model_task1(image_channels=3, num_classes=10)
         # Transfer model to GPU VRAM, if possible.
-        #self.model = to_cuda(self.model)
+        self.model = to_cuda(self.model)
 
         # Define our optimizer. SGD = Stochastich Gradient Descent
         self.optimizer = torch.optim.SGD(self.model.parameters(),
@@ -117,7 +117,7 @@ class Trainer:
         )
         self.VALIDATION_ACC.append(validation_acc)
         self.VALIDATION_LOSS.append(validation_loss)
-        print("Current validation loss:", validation_loss, " Accuracy:", validation_acc)
+        #print("Current validation loss:", validation_loss, " Accuracy:", validation_acc)
         # Compute for testing set
         test_loss, test_acc = compute_loss_and_accuracy(
             self.dataloader_test, self.model, self.loss_criterion
@@ -193,7 +193,7 @@ if __name__ == "__main__":
     plt.plot(trainer.TEST_LOSS, label="Testing Loss")
     plt.legend()
     plt.savefig(os.path.join("plots", "final_loss.png"))
-    plt.show()
+    #plt.show()
 
     plt.figure(figsize=(12, 8))
     plt.title("Accuracy")
@@ -202,7 +202,7 @@ if __name__ == "__main__":
     plt.plot(trainer.TEST_ACC, label="Testing Accuracy")
     plt.legend()
     plt.savefig(os.path.join("plots", "final_accuracy.png"))
-    plt.show()
+    #plt.show()
 
     print("Final test accuracy:", trainer.TEST_ACC[-trainer.early_stop_count])
     print("Final validation accuracy:", trainer.VALIDATION_ACC[-trainer.early_stop_count])
