@@ -122,7 +122,302 @@ class Model_task2_a(nn.Module):
         x = self.classifier(x)
         return x
 
+class Model_task2_a_1(nn.Module):
+    
+    # (conv-relu-pool)x2 dense x 1
+    
+    def __init__(self, image_channels=3, num_classes=10):
+        super().__init__()
+        self.feature_extractor = nn.Sequential(
+                nn.Conv2d(in_channels=image_channels,
+                          out_channels=32,
+                          kernel_size=5,
+                          stride=1,
+                          padding=2),
+                #nn.BatchNorm2d(num_features = 32),
+                nn.ReLU(),
+                nn.MaxPool2d(kernel_size=2, stride=2),
+                nn.Dropout(p=0),
+                
+                nn.Conv2d(in_channels=32,
+                          out_channels=64,
+                          kernel_size=5,
+                          stride=1,
+                          padding=2),
+                #nn.BatchNorm2d(num_features = 64),
+                nn.ReLU(),
+                nn.MaxPool2d(kernel_size=2, stride=2),
+                nn.Dropout(p=0),
+                )
 
+        self.num_output_features = 64*8*8
+        self.classifier = nn.Sequential(
+                nn.Linear(self.num_output_features, num_classes),
+                #nn.Softmax()
+                )
+        
+        #self.feature_extractor.apply(self.init_weights)
+        #self.classifier.apply(self.init_weights)
+        
+    def init_weights(self, m):
+        if type(m) == nn.Conv2d or type(m) == nn.Linear:
+            nn.init.xavier_normal_(m.weight)
+            m.bias.data.fill_(0.01)
+         
+        
+    def forward(self, x):
+        x = self.feature_extractor(x)
+        x = x.view(-1, self.num_output_features)
+        x = self.classifier(x)
+        return x
+
+class Model_task2_a_2(nn.Module):
+    
+    # (conv-relu-pool)x4 dense x 1
+    
+    def __init__(self, image_channels=3, num_classes=10):
+        super().__init__()
+        self.feature_extractor = nn.Sequential(
+                nn.Conv2d(in_channels=image_channels,
+                          out_channels=32,
+                          kernel_size=5,
+                          stride=1,
+                          padding=2),
+                #nn.BatchNorm2d(num_features = 32),
+                nn.ReLU(),
+                nn.MaxPool2d(kernel_size=2, stride=2),
+                nn.Dropout(p=0),
+                
+                nn.Conv2d(in_channels=32,
+                          out_channels=64,
+                          kernel_size=5,
+                          stride=1,
+                          padding=2),
+                #nn.BatchNorm2d(num_features = 64),
+                nn.ReLU(),
+                nn.MaxPool2d(kernel_size=2, stride=2),
+                nn.Dropout(p=0),
+                
+                nn.Conv2d(in_channels=64,
+                          out_channels=128,
+                          kernel_size=5,
+                          stride=1,
+                          padding=2),
+                #nn.BatchNorm2d(num_features = 64),
+                nn.ReLU(),
+                nn.MaxPool2d(kernel_size=2, stride=2),
+                nn.Dropout(p=0),
+                
+                nn.Conv2d(in_channels=128,
+                          out_channels=256,
+                          kernel_size=5,
+                          stride=1,
+                          padding=2),
+                #nn.BatchNorm2d(num_features = 64),
+                nn.ReLU(),
+                nn.MaxPool2d(kernel_size=2, stride=2),
+                nn.Dropout(p=0),
+                )
+
+        self.num_output_features = 256*2*2
+        self.classifier = nn.Sequential(
+                nn.Linear(self.num_output_features, num_classes),
+                #nn.Softmax()
+                )
+        
+        #self.feature_extractor.apply(self.init_weights)
+        #self.classifier.apply(self.init_weights)
+        
+    def init_weights(self, m):
+        if type(m) == nn.Conv2d or type(m) == nn.Linear:
+            nn.init.xavier_normal_(m.weight)
+            m.bias.data.fill_(0.01)
+         
+        
+    def forward(self, x):
+        x = self.feature_extractor(x)
+        x = x.view(-1, self.num_output_features)
+        x = self.classifier(x)
+        return x
+    
+class Model_task2_a_3(nn.Module):
+    
+    # (conv-relu-conv-relu-pool)x4 dense x 1
+    
+    def __init__(self, image_channels=3, num_classes=10):
+        super().__init__()
+        self.feature_extractor = nn.Sequential(
+                nn.Conv2d(in_channels=image_channels,
+                          out_channels=32,
+                          kernel_size=5,
+                          stride=1,
+                          padding=2),
+                #nn.BatchNorm2d(num_features = 32),
+                #nn.MaxPool2d(kernel_size=2, stride=2),
+                nn.ReLU(),
+                nn.Dropout(p=0),
+                
+                nn.Conv2d(in_channels=32,
+                          out_channels=32,
+                          kernel_size=5,
+                          stride=1,
+                          padding=2),
+                #nn.BatchNorm2d(num_features = 64),
+                nn.ReLU(),
+                nn.MaxPool2d(kernel_size=2, stride=2),
+                nn.Dropout(p=0),
+                
+                nn.Conv2d(in_channels=32,
+                          out_channels=64,
+                          kernel_size=5,
+                          stride=1,
+                          padding=2),
+                #nn.BatchNorm2d(num_features = 32),
+                #nn.MaxPool2d(kernel_size=2, stride=2),
+                nn.ReLU(),
+                nn.Dropout(p=0),
+                
+                nn.Conv2d(in_channels=64,
+                          out_channels=64,
+                          kernel_size=5,
+                          stride=1,
+                          padding=2),
+                #nn.BatchNorm2d(num_features = 64),
+                nn.ReLU(),
+                nn.MaxPool2d(kernel_size=2, stride=2),
+                nn.Dropout(p=0),
+                )
+
+        self.num_output_features = 64*8*8
+        self.classifier = nn.Sequential(
+                nn.Linear(self.num_output_features, num_classes),
+                #nn.Softmax()
+                )
+        
+        #self.feature_extractor.apply(self.init_weights)
+        #self.classifier.apply(self.init_weights)
+        
+    def init_weights(self, m):
+        if type(m) == nn.Conv2d or type(m) == nn.Linear:
+            nn.init.xavier_normal_(m.weight)
+            m.bias.data.fill_(0.01)
+         
+        
+    def forward(self, x):
+        x = self.feature_extractor(x)
+        x = x.view(-1, self.num_output_features)
+        x = self.classifier(x)
+        return x
+
+class Model_task2_a_4(nn.Module):
+    
+    # (conv-relu-conv-relu-pool)x4 dense x 1
+    
+    def __init__(self, image_channels=3, num_classes=10):
+        super().__init__()
+        self.feature_extractor = nn.Sequential(
+                nn.Conv2d(in_channels=image_channels,
+                          out_channels=32,
+                          kernel_size=5,
+                          stride=1,
+                          padding=2),
+                #nn.BatchNorm2d(num_features = 32),
+                #nn.MaxPool2d(kernel_size=2, stride=2),
+                nn.ReLU(),
+                nn.Dropout(p=0),
+                
+                nn.Conv2d(in_channels=32,
+                          out_channels=32,
+                          kernel_size=5,
+                          stride=1,
+                          padding=2),
+                #nn.BatchNorm2d(num_features = 64),
+                nn.ReLU(),
+                nn.MaxPool2d(kernel_size=2, stride=2),
+                nn.Dropout(p=0),
+                
+                nn.Conv2d(in_channels=32,
+                          out_channels=64,
+                          kernel_size=5,
+                          stride=1,
+                          padding=2),
+                #nn.BatchNorm2d(num_features = 32),
+                #nn.MaxPool2d(kernel_size=2, stride=2),
+                nn.ReLU(),
+                nn.Dropout(p=0),
+                
+                nn.Conv2d(in_channels=64,
+                          out_channels=64,
+                          kernel_size=5,
+                          stride=1,
+                          padding=2),
+                #nn.BatchNorm2d(num_features = 64),
+                nn.ReLU(),
+                nn.MaxPool2d(kernel_size=2, stride=2),
+                nn.Dropout(p=0),
+                                
+                nn.Conv2d(in_channels=64,
+                          out_channels=128,
+                          kernel_size=5,
+                          stride=1,
+                          padding=2),
+                #nn.BatchNorm2d(num_features = 32),
+                #nn.MaxPool2d(kernel_size=2, stride=2),
+                nn.ReLU(),
+                nn.Dropout(p=0),
+                
+                nn.Conv2d(in_channels=128,
+                          out_channels=128,
+                          kernel_size=5,
+                          stride=1,
+                          padding=2),
+                #nn.BatchNorm2d(num_features = 64),
+                nn.ReLU(),
+                nn.MaxPool2d(kernel_size=2, stride=2),
+                nn.Dropout(p=0),
+                                
+                nn.Conv2d(in_channels=128,
+                          out_channels=256,
+                          kernel_size=5,
+                          stride=1,
+                          padding=2),
+                #nn.BatchNorm2d(num_features = 32),
+                #nn.MaxPool2d(kernel_size=2, stride=2),
+                nn.ReLU(),
+                nn.Dropout(p=0),
+                
+                nn.Conv2d(in_channels=256,
+                          out_channels=256,
+                          kernel_size=5,
+                          stride=1,
+                          padding=2),
+                #nn.BatchNorm2d(num_features = 64),
+                nn.ReLU(),
+                nn.MaxPool2d(kernel_size=2, stride=2),
+                nn.Dropout(p=0),
+                )
+
+        self.num_output_features = 256*2*2
+        self.classifier = nn.Sequential(
+                nn.Linear(self.num_output_features, num_classes),
+                #nn.Softmax()
+                )
+        
+        #self.feature_extractor.apply(self.init_weights)
+        #self.classifier.apply(self.init_weights)
+        
+    def init_weights(self, m):
+        if type(m) == nn.Conv2d or type(m) == nn.Linear:
+            nn.init.xavier_normal_(m.weight)
+            m.bias.data.fill_(0.01)
+         
+        
+    def forward(self, x):
+        x = self.feature_extractor(x)
+        x = x.view(-1, self.num_output_features)
+        x = self.classifier(x)
+        return x
+    
 class Trainer:
 
     def __init__(self):
@@ -144,6 +439,7 @@ class Trainer:
         # Initialize the mode
         #self.model = Model_task1(image_channels=3, num_classes=10)
         self.model = Model_task2_a(image_channels=3, num_classes=10)
+        #self.model = Model_task2_a_1(image_channels=3, num_classes=10)
         # Transfer model to GPU VRAM, if possible.
         self.model = to_cuda(self.model)
 
