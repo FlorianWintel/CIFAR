@@ -1,6 +1,8 @@
 /*
 !.*
+!output_images/
 !plots/
+!test_img.jpg
 ./__pycache__
 ./kernel_descriptor
 ./untitled*

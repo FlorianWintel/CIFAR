@@ -7,17 +7,19 @@ import os
 import matplotlib.pyplot as plt
 
 import torch
+import torchvision
 import numpy as np
 from torch import nn
 from dataloaders import load_cifar10
 from utils import to_cuda, compute_loss_and_accuracy
 
-#print(torch.cuda.current_device())
-print(torch.cuda.is_available())
  
 np.random.seed(7)
 
 class Model_task1(nn.Module):
+    """
+    Initial model, created with the parameters given by the assignment document.
+    """
     def __init__(self, image_channels=3, num_classes=10):
         super().__init__()
         self.layer1 = nn.Sequential(
@@ -52,9 +54,13 @@ class Model_task1(nn.Module):
                 nn.Linear(self.num_output_features,64),
                 nn.ReLU(),
                 nn.Linear(64,num_classes),
-                #nn.Softmax()
+                # Softmax is included in CrossEntropyLoss function
                 )
+        
     def forward(self, x):
+        """
+        Applies one forward pass through the feature extractor and classifier.
+        """
         x = self.layer1(x)
         x = self.layer2(x)
         x = self.layer3(x)
@@ -64,7 +70,9 @@ class Model_task1(nn.Module):
 
 
 class Model_task2_a(nn.Module):
-    
+    """
+    Model a
+    """
     def __init__(self, image_channels=3, num_classes=10):
         super().__init__()
         self.feature_extractor = nn.Sequential(
@@ -103,26 +111,34 @@ class Model_task2_a(nn.Module):
                 nn.ReLU(),
                 nn.BatchNorm1d(num_features = 64),
                 nn.Linear(64,num_classes),
-                #nn.Softmax()
+                # Softmax is included in CrossEntropyLoss function
                 )
         
         #self.feature_extractor.apply(self.init_weights)
         #self.classifier.apply(self.init_weights)
         
     def init_weights(self, m):
+        """
+        Applies Xavier Normalization to the initial weights.
+        """
         if type(m) == nn.Conv2d or type(m) == nn.Linear:
             nn.init.xavier_normal_(m.weight)
             m.bias.data.fill_(0.01)
          
         
     def forward(self, x):
+        """
+        Applies one forward pass through the feature extractor and classifier.
+        """
         x = self.feature_extractor(x)
         x = x.view(-1, self.num_output_features)
         x = self.classifier(x)
         return x
 
 class Model_task2_b(nn.Module):
-    
+    """
+    Model b
+    """
     def __init__(self, image_channels=3, num_classes=10):
         super().__init__()
         self.feature_extractor = nn.Sequential(
@@ -164,7 +180,7 @@ class Model_task2_b(nn.Module):
                 nn.ReLU(),
                 nn.BatchNorm1d(num_features = 64),
                 nn.Linear(64,num_classes),
-                #nn.Softmax()
+                # Softmax is included in CrossEntropyLoss function
                 )
         
         #self.feature_extractor.apply(self.init_weights)
@@ -173,20 +189,55 @@ class Model_task2_b(nn.Module):
     
     
     def init_weights(self, m):
+        """
+        Applies Xavier Normalization to the initial weights.
+        """
         if type(m) == nn.Conv2d or type(m) == nn.Linear:
             nn.init.xavier_normal_(m.weight)
             m.bias.data.fill_(0.01)
          
         
     def forward(self, x):
+        """
+        Applies one forward pass through the feature extractor and classifier.
+        """
         x = self.feature_extractor(x)
         x = x.view(-1, self.num_output_features)
         x = self.classifier(x)
         return x
 
+class  Model_task3(nn.Module):
+    """
+    ResNet model for transfer learning
+    """
+    def  __init__(self):
+        super().__init__ ()
+        self.model = torchvision.models.resnet18(pretrained=True)
+        self.model.fc = nn.Linear(512*4, 10)
+        # No  need  to  apply  softmax ,
+        # as  this  is  done  in  nn. CrossEntropyLoss
+        for  param  in self.model.parameters ():
+        #  Freeze  all  parameters
+            param.requires_grad = False
+        for  param  in self.model.fc.parameters ():
+            #  Unfreeze  the  last  fully -connected
+            param.requires_grad = True
+            #  layer
+            for  param  in self.model.layer4.parameters ():
+                #  Unfreeze  the  last 5  convolutional
+                param.requires_grad = True
+                #  layers
+    def  forward(self , x):
+        """
+        Applies one forward pass.
+        """
+        x = nn.functional.interpolate(x, scale_factor=8)
+        x = self.model(x)
+        return x
+    
 class Trainer:
 
-    def __init__(self):
+    def __init__(self, model):
         """
         Initialize our trainer class.
         Set hyperparameters, architecture, tracking variables etc.
@@ -204,8 +255,8 @@ class Trainer:
         self.loss_criterion = nn.CrossEntropyLoss()
         # Initialize the mode
         #self.model = Model_task1(image_channels=3, num_classes=10)
-        self.model = Model_task2_b(image_channels=3, num_classes=10)
-        #self.model = Model_task2_a_1(image_channels=3, num_classes=10)
+        #self.model = Model_task2_b(image_channels=3, num_classes=10)
+        self.model = model() #Model_task3()
         # Transfer model to GPU VRAM, if possible.
         self.model = to_cuda(self.model)
 
@@ -233,8 +284,8 @@ class Trainer:
 
     def validation_epoch(self):
         """
-            Computes the loss/accuracy for all three datasets.
-            Train, validation and test.
+        Computes the loss/accuracy for all three datasets.
+        Train, validation and test.
         """
         self.model.eval()
 
@@ -294,8 +345,6 @@ class Trainer:
                 X_batch = to_cuda(X_batch)
                 Y_batch = to_cuda(Y_batch)
                 
-                #x=self.model.test_layer(X_batch)
-                #print(x.shape)
                 # Perform the forward pass
                 predictions = self.model(X_batch)
                 # Compute the cross entropy loss for the batch
@@ -318,17 +367,61 @@ class Trainer:
                         self.epochs = (epoch +1)
                         return
 
-if __name__ == "__main__":
-    trainer = Trainer()
-    trainer.train()
+def inference(x):
+    """
+    Calculate the output of the last hidden layer in the transfer-learned ResNet
+    """
+    x=trainer.model.model.conv1(x)
+    x=trainer.model.model.bn1(x)
+    x=trainer.model.model.relu(x)
+    x=trainer.model.model.maxpool(x)
+    x=trainer.model.model.layer1(x)
+    x=trainer.model.model.layer2(x)
+    x=trainer.model.model.layer3(x)
+    x=trainer.model.model.layer4(x)
+    return x
+    
 
+def visualize():
+    """
+    Takes an image and calculates 
+    -    The feature map activations of the first convolutional layer
+    -    The filter weights of the first convolutional layer
+    -    The feature map activations of the last convolutional layer
+    """
+    
+    mean = (0.4914, 0.4822, 0.4465)
+    std = (0.2023, 0.1994, 0.2010)      
+    
+    image = plt.imread("test_img.jpg")
+    image = torchvision.transforms.functional.to_tensor(image)
+    image = torchvision.transforms.functional.normalize(image, mean, std)
+    image = image.view(1,*image.shape)
+    image = nn.functional.interpolate(image, size=(256,256))
+    image = to_cuda(image)
+    
+    first_layer_out = trainer.model.model.conv1(image)
+    to_visualize = first_layer_out.view(first_layer_out.shape[1], 1,
+                                        *first_layer_out.shape[2:])
+    torchvision.utils.save_image(to_visualize, "output_images/filters_first_layer.png")
+    last_layer_out = inference(image)
+    last_layer_out = last_layer_out[:,:64]
+    to_visualize = last_layer_out.view(last_layer_out.shape[1], 1,
+                                        *last_layer_out.shape[2:])
+    torchvision.utils.save_image(to_visualize, "output_images/filters_last_layer.png")
+    first_layer_weights = trainer.model.model.conv1.weight
+    first_layer_weights = first_layer_weights.view(1,-1,7,7)
+    first_layer_weights = first_layer_weights[:,:81]
+    to_visualize = first_layer_weights.view(first_layer_weights.shape[1], 1,
+                                       *first_layer_weights.shape[2:])
+    torchvision.utils.save_image(to_visualize, "output_images/weights_first_layer.png", nrow=9)
 
 def plot_metrics():
     """
     Plots the metrics and prints the final results.
+    Only considers the last model that was trained!
     """
-    os.makedirs("plots", exist_ok=True)
-    
+
     fig1, ax1 = plt.subplots(1,1,figsize=(6,3.5),dpi=200)
     test_metric, = ax1.plot(trainer.TEST_LOSS, label="Testing Loss", color="red")
     validation_metric, = ax1.plot(trainer.VALIDATION_LOSS, label="Validation Loss", color="orange")
@@ -340,7 +433,7 @@ def plot_metrics():
     ax1.set_xticklabels(np.round(np.linspace(0,trainer.epochs,6),5))
     plt.show()
 
-    fig1.savefig(os.path.join("plots", "A3_T2_a_multiclass_crossentropy.eps"))
+    #fig1.savefig(os.path.join("plots", "A3_T2_a_multiclass_crossentropy.eps"))
 
     fig2, ax1 = plt.subplots(1,1,figsize=(6,3.5),dpi=200)
     test_metric, = ax1.plot(trainer.TEST_ACC, label="Testing Accuracy", color="red")
@@ -353,7 +446,7 @@ def plot_metrics():
     ax1.set_xticklabels(np.round(np.linspace(0,trainer.epochs,6),5))
     plt.show()
     
-    fig2.savefig(os.path.join("plots", "A3_T2_a_accuracy.eps"))
+    #fig2.savefig(os.path.join("plots", "A3_T2_a_accuracy.eps"))
     
     #print([param.nelement() for param in trainer.model.parameters()])
 
@@ -369,4 +462,56 @@ def plot_metrics():
     print("Final test loss:", trainer.TEST_LOSS[-trainer.early_stop_count])
     print("Final validation loss:", trainer.VALIDATION_LOSS[-trainer.early_stop_count])
 
-plot_metrics()
+def plot_compare_models():
+    """
+    Plots validation and training losses for model b and ResNet in one figure.
+    """
+    
+    metrics_b = np.loadtxt("plots/model_b.csv",
+                           delimiter=",")
+    metrics_res = np.loadtxt("plots/model_res.csv",
+                             delimiter=",")
+    
+    fig1, ax1 = plt.subplots(1,1,figsize=(6,3.5),dpi=200)
+    training_metric_b, = ax1.plot(metrics_b[:,1], label="Train Loss Model b", color="red")
+    training_metric_res, = ax1.plot(metrics_res[:,1], label="Train Loss ResNet", color="blue")
+    validation_metric_b, = ax1.plot(metrics_b[:,0], label="Val. Loss Model b", color="orange")
+    validation_metric_res, = ax1.plot(metrics_res[:,0], label="Val. Loss ResNet", color="green")    
+    ax1.legend(handles=[training_metric_b,validation_metric_b,training_metric_res,validation_metric_res])
+    ax1.set_xlabel("Epochs")
+    ax1.set_ylabel("Accuracy (%)")
+    ax1.set_xticks(np.linspace(0,metrics_b.shape[0]-1,6))
+    ax1.set_xticklabels(np.round(np.linspace(0,5,6),5))
+    plt.show()
+    
+    #fig1.savefig(os.path.join("plots", "A3_T3_comparison.eps"))
+
+
+
+
+if __name__ == "__main__":
+    
+    os.makedirs("plots", exist_ok=True)
+    os.makedirs("output_images", exist_ok=True)
+    
+    # Train model b and save train and validation losses
+    trainer = Trainer(Model_task2_b)
+    print("Train on model b")
+    trainer.train()
+    #np.savetxt("plots/model_b.csv", 
+    #           np.column_stack((trainer.VALIDATION_LOSS,trainer.TRAIN_LOSS)),
+    #           delimiter=",")
+    
+    # Train the ResNet model and save train and validation losses
+    #trainer = Trainer(Model_task3)
+    #print("Train on ResNet model")
+    #trainer.train()
+    #np.savetxt("plots/model_res.csv", 
+    #           np.column_stack((trainer.VALIDATION_LOSS,trainer.TRAIN_LOSS)),
+    #           delimiter=",")
+
+    # Other models can be trained with trainer = Trainer(<model_name>)
+    
+    plot_metrics()
+    #plot_compare_models()
+    #visualize()
