@@ -28,7 +28,7 @@ def load_cifar10(batch_size, validation_fraction=0.1):
     #  Uncomment to yield the same shuffle of the dataset each time
     # Note that the order of the samples will still be random, since the sampler
     # returns random indices from the list
-    # np.random.seed(42)
+    np.random.seed(7)
     val_indices = np.random.choice(indices, size=split_idx, replace=False)
     train_indices = list(set(indices) - set(val_indices))
 

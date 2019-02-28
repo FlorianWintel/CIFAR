@@ -13,7 +13,7 @@ from dataloaders import load_cifar10
 from utils import to_cuda, compute_loss_and_accuracy
 
 #print(torch.cuda.current_device())
-#print(torch.cuda.is_available())
+print(torch.cuda.is_available())
  
 np.random.seed(7)
 
@@ -68,41 +68,40 @@ class Model_task2_a(nn.Module):
     def __init__(self, image_channels=3, num_classes=10):
         super().__init__()
         self.feature_extractor = nn.Sequential(
+                nn.BatchNorm2d(num_features = image_channels),
                 nn.Conv2d(in_channels=image_channels,
                           out_channels=32,
                           kernel_size=5,
                           stride=1,
                           padding=2),
-                #nn.BatchNorm2d(num_features = 32),
                 nn.MaxPool2d(kernel_size=2, stride=2),
                 nn.ReLU(),
-                nn.Dropout(p=0),
+                nn.BatchNorm2d(num_features = 32),
                 
                 nn.Conv2d(in_channels=32,
                           out_channels=64,
                           kernel_size=5,
                           stride=1,
                           padding=2),
-                #nn.BatchNorm2d(num_features = 64),
                 nn.MaxPool2d(kernel_size=2, stride=2),
                 nn.ReLU(),
-                nn.Dropout(p=0),
+                nn.BatchNorm2d(num_features = 64),
                 
                 nn.Conv2d(in_channels=64,
                           out_channels=128,
                           kernel_size=5,
                           stride=1,
                           padding=2),
-                #nn.BatchNorm2d(num_features = 128),
                 nn.MaxPool2d(kernel_size=2, stride=2),
                 nn.ReLU(),
-                nn.Dropout(p=0)
+                nn.BatchNorm2d(num_features = 128),
                 )
 
         self.num_output_features = 128*4*4
         self.classifier = nn.Sequential(
                 nn.Linear(self.num_output_features,64),
                 nn.ReLU(),
+                nn.BatchNorm1d(num_features = 64),
                 nn.Linear(64,num_classes),
                 #nn.Softmax()
                 )
@@ -122,181 +121,57 @@ class Model_task2_a(nn.Module):
         x = self.classifier(x)
         return x
 
-class Model_task2_a_1(nn.Module):
-    
-    # (conv-relu-pool)x2 dense x 1
+class Model_task2_b(nn.Module):
     
     def __init__(self, image_channels=3, num_classes=10):
         super().__init__()
         self.feature_extractor = nn.Sequential(
                 nn.Conv2d(in_channels=image_channels,
-                          out_channels=32,
-                          kernel_size=5,
-                          stride=1,
-                          padding=2),
-                #nn.BatchNorm2d(num_features = 32),
-                nn.ReLU(),
-                nn.MaxPool2d(kernel_size=2, stride=2),
-                nn.Dropout(p=0),
-                
-                nn.Conv2d(in_channels=32,
                           out_channels=64,
-                          kernel_size=5,
+                          kernel_size=3,
                           stride=1,
-                          padding=2),
-                #nn.BatchNorm2d(num_features = 64),
-                nn.ReLU(),
+                          padding=1),
                 nn.MaxPool2d(kernel_size=2, stride=2),
-                nn.Dropout(p=0),
-                )
-
-        self.num_output_features = 64*8*8
-        self.classifier = nn.Sequential(
-                nn.Linear(self.num_output_features, num_classes),
-                #nn.Softmax()
-                )
-        
-        #self.feature_extractor.apply(self.init_weights)
-        #self.classifier.apply(self.init_weights)
-        
-    def init_weights(self, m):
-        if type(m) == nn.Conv2d or type(m) == nn.Linear:
-            nn.init.xavier_normal_(m.weight)
-            m.bias.data.fill_(0.01)
-         
-        
-    def forward(self, x):
-        x = self.feature_extractor(x)
-        x = x.view(-1, self.num_output_features)
-        x = self.classifier(x)
-        return x
-
-class Model_task2_a_2(nn.Module):
-    
-    # (conv-relu-pool)x4 dense x 1
-    
-    def __init__(self, image_channels=3, num_classes=10):
-        super().__init__()
-        self.feature_extractor = nn.Sequential(
-                nn.Conv2d(in_channels=image_channels,
-                          out_channels=32,
-                          kernel_size=5,
-                          stride=1,
-                          padding=2),
-                #nn.BatchNorm2d(num_features = 32),
                 nn.ReLU(),
-                nn.MaxPool2d(kernel_size=2, stride=2),
-                nn.Dropout(p=0),
-                
-                nn.Conv2d(in_channels=32,
-                          out_channels=64,
-                          kernel_size=5,
-                          stride=1,
-                          padding=2),
-                #nn.BatchNorm2d(num_features = 64),
-                nn.ReLU(),
-                nn.MaxPool2d(kernel_size=2, stride=2),
-                nn.Dropout(p=0),
+                nn.BatchNorm2d(num_features = 64),
+                nn.Dropout(p=.2),
                 
                 nn.Conv2d(in_channels=64,
                           out_channels=128,
                           kernel_size=5,
                           stride=1,
                           padding=2),
-                #nn.BatchNorm2d(num_features = 64),
-                nn.ReLU(),
                 nn.MaxPool2d(kernel_size=2, stride=2),
-                nn.Dropout(p=0),
+                nn.ReLU(),
+                nn.BatchNorm2d(num_features = 128),
+                nn.Dropout(p=.2),
                 
                 nn.Conv2d(in_channels=128,
                           out_channels=256,
-                          kernel_size=5,
+                          kernel_size=7,
                           stride=1,
-                          padding=2),
-                #nn.BatchNorm2d(num_features = 64),
-                nn.ReLU(),
+                          padding=3),
                 nn.MaxPool2d(kernel_size=2, stride=2),
-                nn.Dropout(p=0),
+                nn.ReLU(),
+                nn.BatchNorm2d(num_features = 256),
+                nn.Dropout(p=.2)
                 )
 
-        self.num_output_features = 256*2*2
+                
+        self.num_output_features = 256*4*4
         self.classifier = nn.Sequential(
-                nn.Linear(self.num_output_features, num_classes),
+                nn.Linear(self.num_output_features,64),
+                nn.ReLU(),
+                nn.BatchNorm1d(num_features = 64),
+                nn.Linear(64,num_classes),
                 #nn.Softmax()
                 )
         
         #self.feature_extractor.apply(self.init_weights)
         #self.classifier.apply(self.init_weights)
-        
-    def init_weights(self, m):
-        if type(m) == nn.Conv2d or type(m) == nn.Linear:
-            nn.init.xavier_normal_(m.weight)
-            m.bias.data.fill_(0.01)
-         
-        
-    def forward(self, x):
-        x = self.feature_extractor(x)
-        x = x.view(-1, self.num_output_features)
-        x = self.classifier(x)
-        return x
     
-class Model_task2_a_3(nn.Module):
     
-    # (conv-relu-conv-relu-pool)x4 dense x 1
     
-    def __init__(self, image_channels=3, num_classes=10):
-        super().__init__()
-        self.feature_extractor = nn.Sequential(
-                nn.Conv2d(in_channels=image_channels,
-                          out_channels=32,
-                          kernel_size=5,
-                          stride=1,
-                          padding=2),
-                #nn.BatchNorm2d(num_features = 32),
-                #nn.MaxPool2d(kernel_size=2, stride=2),
-                nn.ReLU(),
-                nn.Dropout(p=0),
-                
-                nn.Conv2d(in_channels=32,
-                          out_channels=32,
-                          kernel_size=5,
-                          stride=1,
-                          padding=2),
-                #nn.BatchNorm2d(num_features = 64),
-                nn.ReLU(),
-                nn.MaxPool2d(kernel_size=2, stride=2),
-                nn.Dropout(p=0),
-                
-                nn.Conv2d(in_channels=32,
-                          out_channels=64,
-                          kernel_size=5,
-                          stride=1,
-                          padding=2),
-                #nn.BatchNorm2d(num_features = 32),
-                #nn.MaxPool2d(kernel_size=2, stride=2),
-                nn.ReLU(),
-                nn.Dropout(p=0),
-                
-                nn.Conv2d(in_channels=64,
-                          out_channels=64,
-                          kernel_size=5,
-                          stride=1,
-                          padding=2),
-                #nn.BatchNorm2d(num_features = 64),
-                nn.ReLU(),
-                nn.MaxPool2d(kernel_size=2, stride=2),
-                nn.Dropout(p=0),
-                )
-
-        self.num_output_features = 64*8*8
-        self.classifier = nn.Sequential(
-                nn.Linear(self.num_output_features, num_classes),
-                #nn.Softmax()
-                )
-        
-        #self.feature_extractor.apply(self.init_weights)
-        #self.classifier.apply(self.init_weights)
-        
     def init_weights(self, m):
         if type(m) == nn.Conv2d or type(m) == nn.Linear:
             nn.init.xavier_normal_(m.weight)
@@ -309,115 +184,6 @@ class Model_task2_a_3(nn.Module):
         x = self.classifier(x)
         return x
 
-class Model_task2_a_4(nn.Module):
-    
-    # (conv-relu-conv-relu-pool)x4 dense x 1
-    
-    def __init__(self, image_channels=3, num_classes=10):
-        super().__init__()
-        self.feature_extractor = nn.Sequential(
-                nn.Conv2d(in_channels=image_channels,
-                          out_channels=32,
-                          kernel_size=5,
-                          stride=1,
-                          padding=2),
-                #nn.BatchNorm2d(num_features = 32),
-                #nn.MaxPool2d(kernel_size=2, stride=2),
-                nn.ReLU(),
-                nn.Dropout(p=0),
-                
-                nn.Conv2d(in_channels=32,
-                          out_channels=32,
-                          kernel_size=5,
-                          stride=1,
-                          padding=2),
-                #nn.BatchNorm2d(num_features = 64),
-                nn.ReLU(),
-                nn.MaxPool2d(kernel_size=2, stride=2),
-                nn.Dropout(p=0),
-                
-                nn.Conv2d(in_channels=32,
-                          out_channels=64,
-                          kernel_size=5,
-                          stride=1,
-                          padding=2),
-                #nn.BatchNorm2d(num_features = 32),
-                #nn.MaxPool2d(kernel_size=2, stride=2),
-                nn.ReLU(),
-                nn.Dropout(p=0),
-                
-                nn.Conv2d(in_channels=64,
-                          out_channels=64,
-                          kernel_size=5,
-                          stride=1,
-                          padding=2),
-                #nn.BatchNorm2d(num_features = 64),
-                nn.ReLU(),
-                nn.MaxPool2d(kernel_size=2, stride=2),
-                nn.Dropout(p=0),
-                                
-                nn.Conv2d(in_channels=64,
-                          out_channels=128,
-                          kernel_size=5,
-                          stride=1,
-                          padding=2),
-                #nn.BatchNorm2d(num_features = 32),
-                #nn.MaxPool2d(kernel_size=2, stride=2),
-                nn.ReLU(),
-                nn.Dropout(p=0),
-                
-                nn.Conv2d(in_channels=128,
-                          out_channels=128,
-                          kernel_size=5,
-                          stride=1,
-                          padding=2),
-                #nn.BatchNorm2d(num_features = 64),
-                nn.ReLU(),
-                nn.MaxPool2d(kernel_size=2, stride=2),
-                nn.Dropout(p=0),
-                                
-                nn.Conv2d(in_channels=128,
-                          out_channels=256,
-                          kernel_size=5,
-                          stride=1,
-                          padding=2),
-                #nn.BatchNorm2d(num_features = 32),
-                #nn.MaxPool2d(kernel_size=2, stride=2),
-                nn.ReLU(),
-                nn.Dropout(p=0),
-                
-                nn.Conv2d(in_channels=256,
-                          out_channels=256,
-                          kernel_size=5,
-                          stride=1,
-                          padding=2),
-                #nn.BatchNorm2d(num_features = 64),
-                nn.ReLU(),
-                nn.MaxPool2d(kernel_size=2, stride=2),
-                nn.Dropout(p=0),
-                )
-
-        self.num_output_features = 256*2*2
-        self.classifier = nn.Sequential(
-                nn.Linear(self.num_output_features, num_classes),
-                #nn.Softmax()
-                )
-        
-        #self.feature_extractor.apply(self.init_weights)
-        #self.classifier.apply(self.init_weights)
-        
-    def init_weights(self, m):
-        if type(m) == nn.Conv2d or type(m) == nn.Linear:
-            nn.init.xavier_normal_(m.weight)
-            m.bias.data.fill_(0.01)
-         
-        
-    def forward(self, x):
-        x = self.feature_extractor(x)
-        x = x.view(-1, self.num_output_features)
-        x = self.classifier(x)
-        return x
-    
 class Trainer:
 
     def __init__(self):
@@ -427,8 +193,8 @@ class Trainer:
         """
         # Define hyperparameters
         self.epochs = 30
-        self.batch_size = 32
-        self.learning_rate = 5e-2
+        self.batch_size = 16
+        self.learning_rate = 5e-4
         self.weight_decay = 0
         self.early_stop_count = 3
 
@@ -438,13 +204,17 @@ class Trainer:
         self.loss_criterion = nn.CrossEntropyLoss()
         # Initialize the mode
         #self.model = Model_task1(image_channels=3, num_classes=10)
-        self.model = Model_task2_a(image_channels=3, num_classes=10)
+        self.model = Model_task2_b(image_channels=3, num_classes=10)
         #self.model = Model_task2_a_1(image_channels=3, num_classes=10)
         # Transfer model to GPU VRAM, if possible.
         self.model = to_cuda(self.model)
 
         # Define our optimizer. SGD = Stochastich Gradient Descent
-        self.optimizer = torch.optim.SGD(self.model.parameters(),
+        #self.optimizer = torch.optim.SGD(self.model.parameters(),
+        #                                 lr = self.learning_rate,
+        #                                 weight_decay = self.weight_decay)
+        # Alternative optimizer, Adam
+        self.optimizer = torch.optim.Adam(self.model.parameters(),
                                          lr = self.learning_rate,
                                          weight_decay = self.weight_decay)
 
@@ -523,7 +293,9 @@ class Trainer:
                 # Transfer images / labels to GPU VRAM, if possible
                 X_batch = to_cuda(X_batch)
                 Y_batch = to_cuda(Y_batch)
-
+                
+                #x=self.model.test_layer(X_batch)
+                #print(x.shape)
                 # Perform the forward pass
                 predictions = self.model(X_batch)
                 # Compute the cross entropy loss for the batch
@@ -573,7 +345,7 @@ def plot_metrics():
     fig2, ax1 = plt.subplots(1,1,figsize=(6,3.5),dpi=200)
     test_metric, = ax1.plot(trainer.TEST_ACC, label="Testing Accuracy", color="red")
     validation_metric, = ax1.plot(trainer.VALIDATION_ACC, label="Validation Accuracy", color="orange")
-    train_metric, = ax1.plot(trainer.TRAIN_ACC, label="Training Accuracy", color="blue")
+    training_metric, = ax1.plot(trainer.TRAIN_ACC, label="Training Accuracy", color="blue")
     ax1.legend(handles=[training_metric,validation_metric,test_metric])
     ax1.set_xlabel("Epochs")
     ax1.set_ylabel("Accuracy (%)")
@@ -583,13 +355,18 @@ def plot_metrics():
     
     fig2.savefig(os.path.join("plots", "A3_T2_a_accuracy.eps"))
     
-    print([param.nelement() for param in trainer.model.parameters()])
+    #print([param.nelement() for param in trainer.model.parameters()])
+
     print("Connections: " + str(sum([param.nelement() for param in trainer.model.parameters()][::2])))
     print("Biases: " + str(sum([param.nelement() for param in trainer.model.parameters()][1::2])))
     print("Trainable Parameters: " + str(sum([param.nelement() for param in trainer.model.parameters()])))
-
+    print()
     print("Final training accuracy:", trainer.TRAIN_ACC[-trainer.early_stop_count])
     print("Final test accuracy:", trainer.TEST_ACC[-trainer.early_stop_count])
     print("Final validation accuracy:", trainer.VALIDATION_ACC[-trainer.early_stop_count])
+    print()
+    print("Final training loss:", trainer.TRAIN_LOSS[-trainer.early_stop_count])
+    print("Final test loss:", trainer.TEST_LOSS[-trainer.early_stop_count])
+    print("Final validation loss:", trainer.VALIDATION_LOSS[-trainer.early_stop_count])
 
 plot_metrics()
